@@ -1,0 +1,48 @@
+services:
+
+  db:
+    build: ./db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  entrypoint:
+    build: ./entrypoint
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      DEFAULT_AUTH_TOKEN: ${DEFAULT_AUTH_TOKEN}
+      MAX_UPLOAD_KB: ${MAX_UPLOAD_KB}
+    volumes:
+      - ./data/tasks:/data
+    depends_on:
+      db:
+        condition: service_healthy
+
+  worker:
+    build: ./worker
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      TASK_TTL_HOURS: ${TASK_TTL_HOURS}
+      CHANNEL_SNR_DB: ${CHANNEL_SNR_DB}
+      SANDBOX_TIMEOUT_SEC: ${SANDBOX_TIMEOUT_SEC}
+      SANDBOX_MEM_MB: ${SANDBOX_MEM_MB}
+      MAX_SAMPLES: ${MAX_SAMPLES}
+      MAX_OUTPUT_FILE_MB: ${MAX_OUTPUT_FILE_MB}
+    volumes:
+      - ./data/tasks:/data
+    depends_on:
+      db:
+        condition: service_healthy

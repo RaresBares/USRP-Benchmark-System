@@ -10,8 +10,16 @@ CREATE TABLE IF NOT EXISTS tasks (
     uid UUID PRIMARY KEY,
     token_id INTEGER REFERENCES tokens(id) NOT NULL,
     state VARCHAR(2) NOT NULL DEFAULT 'PD',
-    task_type VARCHAR(20) NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
     done_at TIMESTAMP,
     error_message TEXT
+);
+
+CREATE TABLE IF NOT EXISTS logs (
+    id SERIAL PRIMARY KEY,
+    token_id INTEGER REFERENCES tokens(id),
+    action VARCHAR(50) NOT NULL,
+    detail TEXT,
+    ip VARCHAR(45),
+    created_at TIMESTAMP DEFAULT NOW()
 );

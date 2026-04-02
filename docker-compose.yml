@@ -23,7 +23,9 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
       DEFAULT_AUTH_TOKEN: ${DEFAULT_AUTH_TOKEN}
-      MAX_UPLOAD_KB: ${MAX_UPLOAD_KB}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB}
+      MAX_WS_CONNECTIONS: ${MAX_WS_CONNECTIONS}
+      MAX_PENDING_TASKS: ${MAX_PENDING_TASKS}
     volumes:
       - ./data/tasks:/data
     depends_on:
@@ -37,10 +39,7 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       TASK_TTL_HOURS: ${TASK_TTL_HOURS}
       CHANNEL_SNR_DB: ${CHANNEL_SNR_DB}
-      SANDBOX_TIMEOUT_SEC: ${SANDBOX_TIMEOUT_SEC}
-      SANDBOX_MEM_MB: ${SANDBOX_MEM_MB}
       MAX_SAMPLES: ${MAX_SAMPLES}
-      MAX_OUTPUT_FILE_MB: ${MAX_OUTPUT_FILE_MB}
     volumes:
       - ./data/tasks:/data
     depends_on:

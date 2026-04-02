@@ -19,7 +19,16 @@ class Task(Base):
     uid = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     token_id = Column(Integer, ForeignKey("tokens.id"), nullable=False)
     state = Column(String(2), nullable=False, default="PD")
-    task_type = Column(String(20), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     done_at = Column(DateTime, nullable=True)
     error_message = Column(Text, nullable=True)
+
+
+class Log(Base):
+    __tablename__ = "logs"
+    id = Column(Integer, primary_key=True)
+    token_id = Column(Integer, ForeignKey("tokens.id"), nullable=True)
+    action = Column(String(50), nullable=False)
+    detail = Column(Text, nullable=True)
+    ip = Column(String(45), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)

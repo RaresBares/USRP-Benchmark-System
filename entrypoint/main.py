@@ -27,10 +27,15 @@ RADIO_INFO = {
     "tx_gain_db": int(os.getenv("TX_GAIN_DB", "30")),
     "rx_gain_db": int(os.getenv("RX_GAIN_DB", "30")),
     "channel_snr_db": float(os.getenv("CHANNEL_SNR_DB", "20")),
-    "antenna_tx": os.getenv("ANTENNA_TX", "TX/RX"),
-    "antenna_rx": os.getenv("ANTENNA_RX", "RX2"),
+    "antenna_tx": os.getenv("ANTENNA_TX", "TX/RX0"),
+    "antenna_rx": os.getenv("ANTENNA_RX", "RX1"),
     "max_upload_mb": int(os.getenv("MAX_UPLOAD_MB", "200")),
     "max_samples": int(os.getenv("MAX_SAMPLES", "2500000")),
+    "use_real_usrp": os.getenv("USE_REAL_USRP", "false").lower() == "true",
+    "duty_cycle_max_percent": float(os.getenv("DUTY_CYCLE_MAX_PERCENT", "10")),
+    "duty_cycle_window_sec": float(os.getenv("DUTY_CYCLE_WINDOW_SEC", "60")),
+    "lbt_enabled": os.getenv("LBT_ENABLED", "true").lower() == "true",
+    "lbt_threshold_dbfs": float(os.getenv("LBT_THRESHOLD_DBFS", "-50")),
 }
 
 ws_count = 0

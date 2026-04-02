@@ -15,11 +15,11 @@ jobs:
       matrix:
         include:
           - context: ./entrypoint
+            dockerfile: ./entrypoint/Dockerfile
             image: usrp-benchmark-entrypoint
-          - context: ./worker
+          - context: .
+            dockerfile: ./worker/Dockerfile
             image: usrp-benchmark-worker
-          - context: ./db
-            image: usrp-benchmark-db
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -44,6 +44,7 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

@@ -17,10 +17,10 @@ services:
       retries: 5
 
   entrypoint:
-    image: ghcr.io/YOURUSER/usrp-benchmark-entrypoint:latest
+    image: ghcr.io/${GHCR_OWNER}/usrp-benchmark-entrypoint:${IMAGE_TAG:-latest}
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "${ENTRYPOINT_PORT:-8000}:8000"
     env_file: .env
     volumes:
       - ./data/tasks:/data
@@ -29,15 +29,14 @@ services:
         condition: service_healthy
 
   worker:
-    image: ghcr.io/YOURUSER/usrp-benchmark-worker:latest
+    image: ghcr.io/${GHCR_OWNER}/usrp-benchmark-worker:${IMAGE_TAG:-latest}
     restart: unless-stopped
-    privileged: true
     env_file: .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./data/tasks:/data
-      - /dev/bus/usb:/dev/bus/usb
-    devices:
-      - /dev/bus/usb
+      - ./data/signals:/data/signals
     depends_on:
       db:
         condition: service_healthy

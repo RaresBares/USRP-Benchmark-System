@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "usrp-testbed-library"
+version = "0.1.0"
+description = "USRP Testbed Library with TX/RX daemons for X410 SDR devices"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy",
+    "pyzmq>=26.0",
+    "h5py>=3.10",
+]
+
+[project.optional-dependencies]
+daemon = [
+    "uhd",
+]
+
+[tool.setuptools.packages.find]
+include = ["usrp_testbed_library*"]
+
+[tool.setuptools.package-data]
+usrp_testbed_library = ["*.sh", "*.m"]

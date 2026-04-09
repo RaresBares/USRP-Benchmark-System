@@ -1,4 +1,5 @@
 import json
+import sys
 import asyncio
 import numpy as np
 import websockets
@@ -87,26 +88,80 @@ class USRPClient:
         return cls._fetch_info()
 
     @classmethod
-    def send(cls, signal: np.ndarray) -> np.ndarray:
+    def send(cls, signal: np.ndarray, verbose: bool = False) -> np.ndarray:
         signal = np.asarray(signal, dtype=np.complex64)
         raw = np.empty(len(signal) * 2, dtype=np.float32)
         raw[0::2] = signal.real
         raw[1::2] = signal.imag
-        result_bytes = asyncio.run(cls._ws_send(raw.tobytes()))
+        result_bytes = asyncio.run(cls._ws_send(raw.tobytes(), verbose=verbose))
         raw_out = np.frombuffer(result_bytes, dtype=np.float32)
         return raw_out[0::2] + 1j * raw_out[1::2]
 
     @classmethod
-    async def _ws_send(cls, data: bytes) -> bytes:
+    async def _ws_send(cls, data: bytes, verbose: bool = False) -> bytes:
         url = f"ws://{cls._base_url()}/ws/run?auth_token={cls._token}"
         async with websockets.connect(url, max_size=200 * 1024 * 1024) as ws:
             await ws.send(data)
+            if verbose:
+                print(f"[upload] Sent {len(data):,} bytes ({len(data) // 8:,} samples)")
+
+            result_size = None
+
             while True:
                 msg = await ws.recv()
                 if isinstance(msg, bytes):
+                    if verbose:
+                        total = len(msg)
+                        print(f"\r[download] {total:,} bytes received", end="")
+                        print(f" — {total // 8:,} samples")
                     return msg
+
                 info = json.loads(msg)
+
                 if "error" in info:
+                    if verbose:
+                        print(f"\r[error] {info['error']}: {info.get('message', '')}")
                     raise RuntimeError(f"Server error: {info['message']}")
-                if info.get("message") == "info":
+
+                if not verbose:
+                    if info.get("message") == "info":
+                        cls._info = {k: v for k, v in info.items() if k != "message"}
+                    continue
+
+                msg_type = info.get("message")
+
+                if msg_type == "info":
                     cls._info = {k: v for k, v in info.items() if k != "message"}
+                    fc = info.get("carrier_frequency_hz", 0) / 1e6
+                    bw = info.get("bandwidth_hz", 0) / 1e6
+                    sr = info.get("sample_rate_hz", 0) / 1e6
+                    snr = info.get("channel_snr_db", "?")
+                    usrp = "USRP" if info.get("use_real_usrp") else "AWGN"
+                    print(f"[info] {usrp} | Carrier: {fc:.0f} MHz | BW: {bw:.0f} MHz | Rate: {sr:.0f} MSps | SNR: {snr} dB")
+
+                elif msg_type == "queued":
+                    pos = info.get("queue_position", 0)
+                    uid = info.get("uid", "")[:8]
+                    if pos == 0:
+                        print(f"[queued] Task {uid}... — next in line")
+                    else:
+                        print(f"[queued] Task {uid}... — {pos} task(s) ahead")
+
+                elif msg_type == "status":
+                    state = info.get("state", "?")
+                    pos = info.get("queue_position", 0)
+                    if state == "PD":
+                        if pos == 0:
+                            print(f"\r[waiting] Next in line...", end="")
+                        else:
+                            print(f"\r[waiting] {pos} task(s) ahead...", end="")
+                    elif state == "R":
+                        print(f"\r[running] Processing signal...            ", end="")
+                    elif state == "D":
+                        print(f"\r[done] Processing complete                ")
+
+                elif msg_type == "done":
+                    print("[download] Receiving result...")
+
+                else:
+                    print(f"[server] {json.dumps(info)}")

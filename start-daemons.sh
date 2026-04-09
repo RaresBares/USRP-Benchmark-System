@@ -35,6 +35,9 @@ mkdir -p "$PID_DIR" "$LOG_DIR" "$SIGNAL_DIR_HOST"
 
 PYTHON="${VENV_DIR}/bin/python"
 
+# Resolve full Python path so UHD (possibly in user site-packages) is found under sudo
+DAEMON_PYTHONPATH=$("$PYTHON" -c "import sys; print(':'.join(p for p in sys.path if p))" 2>/dev/null || true)
+
 echo "=========================================="
 echo "  Starting USRP Daemons"
 echo "=========================================="
@@ -49,7 +52,8 @@ if [ -f "${PID_DIR}/tx.pid" ] && sudo kill -0 "$(cat ${PID_DIR}/tx.pid)" 2>/dev/
     echo "TX daemon already running (PID $(cat ${PID_DIR}/tx.pid))"
 else
     echo "Starting TX daemon ..."
-    sudo -E taskset -c 2 chrt -f 80 \
+    sudo PYTHONPATH="$DAEMON_PYTHONPATH" \
+        taskset -c 2 chrt -f 80 \
         "$PYTHON" "${DAEMON_DIR}/tx_daemon.py" \
         --usrp-addr "$USRP_TX_ADDR" \
         --mcr "$MCR" \
@@ -64,7 +68,8 @@ if [ -f "${PID_DIR}/rx.pid" ] && sudo kill -0 "$(cat ${PID_DIR}/rx.pid)" 2>/dev/
     echo "RX daemon already running (PID $(cat ${PID_DIR}/rx.pid))"
 else
     echo "Starting RX daemon ..."
-    sudo -E taskset -c 3 chrt -f 80 \
+    sudo PYTHONPATH="$DAEMON_PYTHONPATH" \
+        taskset -c 3 chrt -f 80 \
         "$PYTHON" "${DAEMON_DIR}/rx_daemon.py" \
         --usrp-addr "$USRP_RX_ADDR" \
         --mcr "$MCR" \

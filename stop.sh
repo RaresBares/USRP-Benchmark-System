@@ -4,7 +4,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 echo "Stopping Docker containers ..."
-docker compose -f docker-compose.prod.yml down
+sudo docker compose -f docker-compose.prod.yml down
 
 if [ -f .env ]; then
     set -a
